@@ -49,7 +49,7 @@ class UsefulData:
 
     def print_bus_times(self, buses, name):
         for bus in buses:
-            print("Bus number " + bus + " is estimated to arrive at: " + str(buses[bus]) + "at the " + name + " stop.")
+            print("Bus number " + bus + " is estimated to arrive at: " + str(buses[bus]) + " at the " + name + " stop.")
 
 
 class WebData:
