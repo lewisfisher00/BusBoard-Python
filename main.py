@@ -57,7 +57,7 @@ class WebData:
         self.atcocode = atcocode
         self.url = 'https://transportapi.com/v3/uk/bus/stop/' + self.atcocode + \
                    '/live.json?app_id=3f307260&app_key=1f62a399e530d84bb9c271fd491343d4&group=' \
-                   'route&limit=5&nextbuses=yes'
+                   'route&limit=5&nextbuses=no'
 
     def read_url(self):
         r = requests.get(self.url)
