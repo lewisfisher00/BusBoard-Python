@@ -14,14 +14,14 @@
             <h5>Bus Stop: {{stop[1]}}</h5>
             <ul>
             {% if stop[0] != null %}
-            {% for bus_num in stop[0] %}
-                <li>Bus Number: {{ bus_num }}</li>
-                <ul>
-                {% for arrival_time in stop[0][bus_num] %}
-                    <li>Arriving at: {{ arrival_time }}</li>
+                {% for bus_num in stop[0] %}
+                  <li>Bus Number: {{ bus_num }}</li>
+                  <ul>
+                  {% for arrival_time in stop[0][bus_num] %}
+                     <li>Arriving at: {{ arrival_time }}</li>
+                  {% endfor %}
+                  </ul>
                 {% endfor %}
-                </ul>
-            {% endfor %}
             {% else %}
                 <div>No buses for this stop</div>
             {% endif %}
