@@ -72,7 +72,7 @@ def main():
             postcode_to_use = postcode(input("Enter your postcode: "))
             valid = True
         except:
-            print("Postcode not in acceptable format, try again.")
+            print("Not a valid postcode, try again.")
     stops = postcode_to_use.get_closest_bus_stops()
     for stop in stops:
         website = WebData(stop)
