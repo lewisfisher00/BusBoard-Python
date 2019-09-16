@@ -66,19 +66,26 @@ class WebData:
 
 def main():
     print("Welcome to BusBoard.")
-    valid = False
-    while not valid:
-        try:
-            postcode_to_use = postcode(input("Enter your postcode: "))
-            valid = True
-        except:
-            print("Not a valid postcode, try again.")
+    post_code = input("Enter your postcode: ")
+    postcode_to_use = postcode(post_code)
     stops = postcode_to_use.get_closest_bus_stops()
     for stop in stops:
         website = WebData(stop)
         useful_data = UsefulData(website.read_url())
         buses = useful_data.extract_bus_number_with_times()
         useful_data.print_bus_times(buses, stops[stop])
+
+
+def send_data_for_webpage(post_code):
+    postcode_to_use = postcode(post_code)
+    stops = postcode_to_use.get_closest_bus_stops()
+    output = []
+    for stop in stops:
+        website = WebData(stop)
+        useful_data = UsefulData(website.read_url())
+        buses = useful_data.extract_bus_number_with_times()
+        output.append((buses, stops[stop]))
+    return output
 
 
 if __name__ == "__main__":

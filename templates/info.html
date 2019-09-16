@@ -2,9 +2,32 @@
 {% block title %}Bus Information{% endblock %}
 {% block content %}
 <div class="container body-content">
+    <head>
+    <meta http-equiv="refresh" content="30">
+    </head>
     <h2>Bus Information</h2>
+    <p></p>
     <div>
-        <p>You entered postcode <span>{{ postcode }}</span></p>
+        <h4>You entered postcode <span>{{ info[0] }}</span></h4>
+        <p></p>
+        {% for stop in info[1] %}
+            <h5>Bus Stop: {{stop[1]}}</h5>
+            <ul>
+            {% if stop[0] != null %}
+            {% for bus_num in stop[0] %}
+                <li>Bus Number: {{ bus_num }}</li>
+                <ul>
+                {% for arrival_time in stop[0][bus_num] %}
+                    <li>Arriving at: {{ arrival_time }}</li>
+                {% endfor %}
+                </ul>
+            {% endfor %}
+            {% else %}
+                <div>No buses for this stop</div>
+            {% endif %}
+            </ul>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
+
