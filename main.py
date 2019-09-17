@@ -1,22 +1,41 @@
 import requests
 
 
-class postcode:
-    def __init__(self, postcode_input):
-        self.postcode_input = postcode_input
-        self.latitude = str(self.obtain_lat())
-        self.longitude = str(self.obtain_lon())
+class BusTimesData:
+    def __init__(self, atcocode):
+        self.atcocode = atcocode
+        self.bus_times_url = f'https://transportapi.com/v3/uk/bus/stop/{self.atcocode}/live.json?app_id=3f307260&' \
+                             'app_key=1f62a399e530d84bb9c271fd491343d4&group=route&limit=5&nextbuses=no'
+
+    def read_bus_times_url(self):
+        r = requests.get(self.bus_times_url)
+        return r.json()
+
+
+class BusStopsData:
+    def __init__(self, lat_lon):
+        self.lat_lon = lat_lon
+
+    def get_atcocodes(self):
+        bus_stops_info = requests.get("https://transportapi.com/v3/uk/places.json?"
+                                      "app_id=3f307260&app_key=1f62a399e530d84bb9c271fd491343d4&"
+                                      f"lat={self.lat_lon[0]}&lon={self.lat_lon[1]}&type=bus_stop").json()
+        stops = []
+        find = bus_stops_info["member"]
+        for stop in range(0, 2):
+            stops.append(find[stop]["atcocode"])
+        return stops
+
+
+class PostcodeTravelInfo:
+    def __init__(self, postcode, stops):
+        self.postcode = postcode
+        self.lat = str(self.obtain_lat())
+        self.lon = str(self.obtain_lon())
+        self.stops = stops
 
     def get_post_info(self):
-        return requests.get('http://api.postcodes.io/postcodes/' + self.postcode_input).json()
-
-    def obtain_lon(self):
-        post_ifo = self.get_post_info()
-        try:
-            lon = str(post_ifo["result"]["longitude"])
-        except:
-            lon = 0
-        return lon
+        return requests.get(f'http://api.postcodes.io/postcodes/{self.postcode}').json()
 
     def obtain_lat(self):
         post_ifo = self.get_post_info()
@@ -26,87 +45,74 @@ class postcode:
             lat = 0
         return lat
 
-    def get_closest_bus_stops(self):
-        bus_stops_info = requests.get("https://transportapi.com/v3/uk/places.json?"
-                                      "app_id=3f307260&app_key=1f62a399e530d84bb9c271fd491343d4&"
-                                      "lat=" + self.latitude + "&lon=" + self.longitude + "&type=bus_stop").json()
-        stops = {}
-        find = bus_stops_info["member"]
-        for stop in range(0, 2):
-            atcocode = find[stop]["atcocode"]
-            name = find[stop]["name"]
-            stops[atcocode] = name
-        return stops
+    def obtain_lon(self):
+        post_ifo = self.get_post_info()
+        try:
+            lon = str(post_ifo["result"]["longitude"])
+        except:
+            lon = 0
+        return lon
 
-    @staticmethod
-    def display_error():
-        print("Invalid postcode enter, try again.")
+    def __str__(self):
+        output = f'Postcode entered: {self.postcode}'
+        for stop in self.stops:
+            output += str(stop)
+        return output
 
 
-class UsefulData:
-    def __init__(self, raw_data):
-        self.raw_data = raw_data
+class Stop:
+    def __init__(self, name, departures):
+        self.name = name
+        self.departures = departures
 
-    def extract_bus_number_with_times(self):
-        bus_arrival_dict = {}
-        departures_response = self.raw_data["departures"]
-        for bus_num in departures_response:
-            departures_for_bus = []
-            for bus in departures_response[bus_num]:
-                departures_for_bus.append(bus["best_departure_estimate"])
-            bus_arrival_dict[bus_num] = departures_for_bus
-        return bus_arrival_dict
-
-    @staticmethod
-    def print_bus_times_main(buses, name):
-        for bus in buses:
-            print("Bus number " + bus + " is estimated to arrive at: " + str(buses[bus]) + " at the " + name + " stop.")
+    def __str__(self):
+        output = f'\n\t- Stop name: {self.name}'
+        for departure in self.departures:
+            output += str(departure)
+        return output
 
 
-class raw_json_info:
-    def __init__(self, atcocode):
-        self.atcocode = atcocode
-        self.url = 'https://transportapi.com/v3/uk/bus/stop/' + self.atcocode + \
-                   '/live.json?app_id=3f307260&app_key=1f62a399e530d84bb9c271fd491343d4&group=' \
-                   'route&limit=5&nextbuses=no'
+class Departure:
+    def __init__(self, time, bus_num):
+        self.time = time
+        self.bus_num = bus_num
 
-    def read_url(self):
-        r = requests.get(self.url)
-        return r.json()
+    def __str__(self):
+        return f'\n\t\t -Bus {self.bus_num} will arrive at {self.time}.'
 
 
-def cm_main():
+def create_full_data_struct(postcode):
+    full_details_for_postcode = PostcodeTravelInfo(postcode, [])
+    if (full_details_for_postcode.lat == 0) & (full_details_for_postcode.lon == 0):
+        return 0
+    else:
+        atcocodes = BusStopsData((full_details_for_postcode.lat, full_details_for_postcode.lon)).get_atcocodes()
+        for atcocode in atcocodes:
+            raw_stop = BusTimesData(atcocode).read_bus_times_url()
+            stop = Stop(raw_stop["stop_name"], [])
+            raw_departures = raw_stop["departures"]
+            for bus_num in raw_departures:
+                raw_departures_for_number = raw_departures[bus_num]
+                for raw_depart in raw_departures_for_number:
+                    dep = Departure(
+                        raw_depart["best_departure_estimate"],
+                        raw_depart["line_name"])
+                    stop.departures.append(dep)
+            full_details_for_postcode.stops.append(stop)
+    return full_details_for_postcode
+
+
+def main_cmd():
     print("Welcome to BusBoard.")
     valid = False
-    postcode_to_use = ''
     while not valid:
         post_code = input("Enter your postcode: ")
-        postcode_to_use = postcode(post_code)
-        if (postcode_to_use.latitude == '0') & (postcode_to_use.longitude == '0'):
-            postcode_to_use.display_error()
+        result = create_full_data_struct(post_code)
+        if result == 0:
+            print("Invalid postcode, try again.")
         else:
             valid = True
-    stops = postcode_to_use.get_closest_bus_stops()
-    for stop in stops:
-        website = raw_json_info(stop)
-        useful_data = UsefulData(website.read_url())
-        buses = useful_data.extract_bus_number_with_times()
-        useful_data.print_bus_times_main(buses, stops[stop])
+            print(result)
 
 
-def webpage_main(post_code):
-    postcode_to_use = postcode(post_code)
-    if (postcode_to_use.latitude == '0') & (postcode_to_use.longitude == '0'):
-        return 0
-    stops = postcode_to_use.get_closest_bus_stops()
-    output = []
-    for stop in stops:
-        website = raw_json_info(stop)
-        useful_data = UsefulData(website.read_url())
-        buses = useful_data.extract_bus_number_with_times()
-        output.append((buses, stops[stop]))
-    return output
-
-
-if __name__ == "__main__":
-    cm_main()
+main_cmd()
