@@ -4,8 +4,8 @@ import requests
 class postcode:
     def __init__(self, postcode_input):
         self.postcode_input = postcode_input
-        self.latitude = self.obtain_lat()
-        self.longitude = self.obtain_lon()
+        self.latitude = str(self.obtain_lat())
+        self.longitude = str(self.obtain_lon())
 
     def get_post_info(self):
         return requests.get('http://api.postcodes.io/postcodes/' + self.postcode_input).json()
@@ -37,6 +37,9 @@ class postcode:
             name = find[stop]["name"]
             stops[atcocode] = name
         return stops
+
+    def display_error(self):
+        print("Invalid postcode enter, try again.")
 
 
 class UsefulData:
@@ -73,8 +76,15 @@ class raw_json_info:
 
 def cm_main():
     print("Welcome to BusBoard.")
-    post_code = input("Enter your postcode: ")
-    postcode_to_use = postcode(post_code)
+    valid = False
+    postcode_to_use = ''
+    while not valid:
+        post_code = input("Enter your postcode: ")
+        postcode_to_use = postcode(post_code)
+        if (postcode_to_use.latitude == '0') & (postcode_to_use.longitude == '0'):
+            postcode_to_use.display_error()
+        else:
+            valid = True
     stops = postcode_to_use.get_closest_bus_stops()
     for stop in stops:
         website = raw_json_info(stop)
@@ -85,7 +95,7 @@ def cm_main():
 
 def webpage_main(post_code):
     postcode_to_use = postcode(post_code)
-    if postcode_to_use.latitude == 0 & postcode_to_use.longitude == 0:
+    if (postcode_to_use.latitude == '0') & (postcode_to_use.longitude == '0'):
         return 0
     stops = postcode_to_use.get_closest_bus_stops()
     output = []
