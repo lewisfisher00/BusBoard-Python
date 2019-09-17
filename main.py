@@ -38,7 +38,8 @@ class postcode:
             stops[atcocode] = name
         return stops
 
-    def display_error(self):
+    @staticmethod
+    def display_error():
         print("Invalid postcode enter, try again.")
 
 
