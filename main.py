@@ -12,21 +12,27 @@ class postcode:
 
     def obtain_lon(self):
         post_ifo = self.get_post_info()
-        lon = str(post_ifo["result"]["longitude"])
+        try:
+            lon = str(post_ifo["result"]["longitude"])
+        except:
+            lon = 0
         return lon
 
     def obtain_lat(self):
         post_ifo = self.get_post_info()
-        lat = str(post_ifo["result"]["latitude"])
+        try:
+            lat = str(post_ifo["result"]["latitude"])
+        except:
+            lat = 0
         return lat
 
     def get_closest_bus_stops(self):
         bus_stops_info = requests.get("https://transportapi.com/v3/uk/places.json?"
-                     "app_id=3f307260&app_key=1f62a399e530d84bb9c271fd491343d4&"
-                     "lat=" + self.latitude + "&lon=" + self.longitude + "&type=bus_stop").json()
+                                      "app_id=3f307260&app_key=1f62a399e530d84bb9c271fd491343d4&"
+                                      "lat=" + self.latitude + "&lon=" + self.longitude + "&type=bus_stop").json()
         stops = {}
         find = bus_stops_info["member"]
-        for stop in range(0,2):
+        for stop in range(0, 2):
             atcocode = find[stop]["atcocode"]
             name = find[stop]["name"]
             stops[atcocode] = name
@@ -47,12 +53,13 @@ class UsefulData:
             bus_arrival_dict[bus_num] = departures_for_bus
         return bus_arrival_dict
 
-    def print_bus_times(self, buses, name):
+    @staticmethod
+    def print_bus_times_main(buses, name):
         for bus in buses:
             print("Bus number " + bus + " is estimated to arrive at: " + str(buses[bus]) + " at the " + name + " stop.")
 
 
-class WebData:
+class raw_json_info:
     def __init__(self, atcocode):
         self.atcocode = atcocode
         self.url = 'https://transportapi.com/v3/uk/bus/stop/' + self.atcocode + \
@@ -64,24 +71,26 @@ class WebData:
         return r.json()
 
 
-def main():
+def cm_main():
     print("Welcome to BusBoard.")
     post_code = input("Enter your postcode: ")
     postcode_to_use = postcode(post_code)
     stops = postcode_to_use.get_closest_bus_stops()
     for stop in stops:
-        website = WebData(stop)
+        website = raw_json_info(stop)
         useful_data = UsefulData(website.read_url())
         buses = useful_data.extract_bus_number_with_times()
-        useful_data.print_bus_times(buses, stops[stop])
+        useful_data.print_bus_times_main(buses, stops[stop])
 
 
-def send_data_for_webpage(post_code):
+def webpage_main(post_code):
     postcode_to_use = postcode(post_code)
+    if postcode_to_use.latitude == 0 & postcode_to_use.longitude == 0:
+        return 0
     stops = postcode_to_use.get_closest_bus_stops()
     output = []
     for stop in stops:
-        website = WebData(stop)
+        website = raw_json_info(stop)
         useful_data = UsefulData(website.read_url())
         buses = useful_data.extract_bus_number_with_times()
         output.append((buses, stops[stop]))
@@ -89,4 +98,4 @@ def send_data_for_webpage(post_code):
 
 
 if __name__ == "__main__":
-    main()
+    cm_main()
