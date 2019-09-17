@@ -89,7 +89,7 @@ def create_full_data_struct(postcode):
         atcocodes = BusStopsData((full_details_for_postcode.lat, full_details_for_postcode.lon)).get_atcocodes()
         for atcocode in atcocodes:
             raw_stop = BusTimesData(atcocode).read_bus_times_url()
-            stop = Stop(raw_stop["stop_name"], [])
+            stop = Stop(raw_stop["name"], [])
             raw_departures = raw_stop["departures"]
             for bus_num in raw_departures:
                 raw_departures_for_number = raw_departures[bus_num]
@@ -115,4 +115,4 @@ def main_cmd():
             print(result)
 
 
-main_cmd()
+# main_cmd()
